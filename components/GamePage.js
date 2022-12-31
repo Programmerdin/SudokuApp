@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View, Dimensions, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, Dimensions, TouchableOpacity, Pressable } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import puzzles_easy from "../puzzles/Puzzles_Easy";
 import puzzles_medium from "../puzzles/Puzzles_Medium";
@@ -22,11 +22,12 @@ const windowWidth = Dimensions.get("window").width;
 
 export default function GamePage({ route, navigation }) {
   //state for each cell
-  const [currently_selected_cell_coordinate, Set_Currently_selected_cell_coordinate] = useState();
   const [is_cell_selected, Set_is_cell_selected] = useState(false);
+  const [currently_selected_cell_coordinate, Set_Currently_selected_cell_coordinate] = useState();
+  const [currently_selected_cell_number, Set_currently_selected_cell_number] = useState();
 
   const [is_note_mode, Set_is_note_mode] = useState(false);
-  const [hint_usage_count, Set_hint_usage_count] = useState(0)
+  const [hint_usage_count, Set_hint_usage_count] = useState(0);
 
   //check if the puzzle is solved
   const [is_puzzle_solved, Set_is_puzzle_solved] = useState(false);
@@ -34,8 +35,8 @@ export default function GamePage({ route, navigation }) {
   //where coordinate of given cells will be saved
   const [coordinate_list_of_given_cells, Set_coordinate_list_of_given_cells] = useState([]);
 
-  //which puzzle to use out of 1000
-  let puzzle_index = 0;
+  //which puzzle to use out of 1000, picks a random number 0 to 999
+  let puzzle_index = Math.floor(Math.random() * 999);
 
   //count correct number of cells when submit button is pressed
   let correct_number_of_cells = 0;
@@ -163,10 +164,45 @@ export default function GamePage({ route, navigation }) {
     return styles.cell_text2;
   }
 
+  function row_thick_border(row_index) {
+    if (row_index === 2 || row_index === 5) {
+      return styles.row_thick;
+    } else {
+      return styles.row;
+    }
+  }
+
+  function column_thick_border(column_index) {
+    if (column_index === 2 || column_index === 5) {
+      return styles.cell_thick;
+    } else {
+      return styles.cell;
+    }
+  }
+
+  function Comprehensive_styler(coordinate_list_of_given_cells, y, x, number, currently_selected_cell_coordinate, currently_selected_cell_number, is_cell_selected) {
+    //check if a cell has been selected first
+    if (is_cell_selected) {
+      //currently selected cell
+      if (currently_selected_cell_coordinate[0] === y && currently_selected_cell_coordinate[1] === x) {
+        return styles.selected_cell;
+      }
+      //number in cell matches the number in currently selected cell and it is not an empty cell
+      if (number === currently_selected_cell_number && currently_selected_cell_number != "") {
+        return styles.same_number;
+      }
+      if (currently_selected_cell_coordinate[0] === y || currently_selected_cell_coordinate[1] === x) {
+        return styles.same_row_or_column;
+      }
+    }
+  }
+
   return (
     <View style={styles.container}>
       <Text>GamePage.js</Text>
       <Text>difficulty: {game_difficulty}</Text>
+      <Text>currently_selected_cell_coordinate: {currently_selected_cell_coordinate}</Text>
+      <Text>currently_selected_cell_number: {currently_selected_cell_number}</Text>
       <TouchableOpacity
         style={styles.submit_button}
         onPress={() => {
@@ -176,18 +212,30 @@ export default function GamePage({ route, navigation }) {
         <Text>Test Button</Text>
       </TouchableOpacity>
 
-      <View style={styles.sudoku_game_container}>
+      <View>
         {/* how to make a 9x9 game area and different border styles for the lines */}
         {[...Array(9).keys()].map((index_y) => {
           return (
-            <View style={index_y === 2 || index_y === 5 ? styles.row_thick : styles.row}>
+            <View style={[row_thick_border(index_y)]}>
               {[...Array(9).keys()].map((index_x) => {
                 return (
                   <TouchableOpacity
-                    style={index_x === 2 || index_x === 5 ? styles.cell_thick : styles.cell}
+                    style={[
+                      column_thick_border(index_x),
+                      Comprehensive_styler(
+                        coordinate_list_of_given_cells,
+                        index_y,
+                        index_x,
+                        sudoku_grid[index_y][index_x],
+                        currently_selected_cell_coordinate,
+                        currently_selected_cell_number,
+                        is_cell_selected
+                      ),
+                    ]}
                     onPress={() => {
                       Set_Currently_selected_cell_coordinate([index_y, index_x]);
                       Set_is_cell_selected(true);
+                      Set_currently_selected_cell_number(sudoku_grid[index_y][index_x]);
                     }}
                   >
                     {/* black font for initial cells, blue font for cells that user adds on */}
@@ -207,18 +255,18 @@ export default function GamePage({ route, navigation }) {
             //check if a cell has been selected and the selected cell is not a givenCell
             if (is_cell_selected && !isGivenCell(coordinate_list_of_given_cells, currently_selected_cell_coordinate[0], currently_selected_cell_coordinate[1])) {
               //find the correct number for the given cell position
-              let correct_number = solved_grid[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]]
+              let correct_number = solved_grid[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]];
               //add cell to the sudoku_grid
               let temp_grid = sudoku_grid.slice(); //copying array can be iffy
-              temp_grid[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]] = correct_number
+              temp_grid[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]] = correct_number;
               Set_sudoku_grid(temp_grid);
               //add coordinates to given cell list
-              Set_coordinate_list_of_given_cells([...coordinate_list_of_given_cells, [currently_selected_cell_coordinate[0],currently_selected_cell_coordinate[1]]])
-              Set_hint_usage_count(hint_usage_count+1)
+              Set_coordinate_list_of_given_cells([...coordinate_list_of_given_cells, [currently_selected_cell_coordinate[0], currently_selected_cell_coordinate[1]]]);
+              Set_hint_usage_count(hint_usage_count + 1);
             }
           }}
         >
-          <Text>{'Hint '+hint_usage_count}</Text>
+          <Text>{"Hint " + hint_usage_count}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tool_icon}
@@ -321,8 +369,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 2,
     borderColor: "black",
-    width: 40,
-    height: 40,
+    width: 35,
+    height: 35,
   },
   number_select_text: {
     color: "black",
@@ -376,5 +424,15 @@ const styles = StyleSheet.create({
     backgroundColor: "pink",
     marginTop: 20,
     borderRadius: 5,
+  },
+
+  selected_cell: {
+    backgroundColor: "#b1e0fe",
+  },
+  same_number: {
+    backgroundColor: "#c2d7e8",
+  },
+  same_row_or_column: {
+    backgroundColor: "#e3ecf5",
   },
 });
