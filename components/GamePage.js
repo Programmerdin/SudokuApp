@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View, Dimensions, TouchableOpacity, Pressable } from "react-native";
+import { StyleSheet, Text, View, Dimensions, TouchableOpacity, Pressable, Image, Modal } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import puzzles_easy from "../puzzles/Puzzles_Easy";
 import puzzles_medium from "../puzzles/Puzzles_Medium";
@@ -10,6 +10,10 @@ import puzzles_insane from "../puzzles/Puzzles_Insane";
 import puzzles_inhuman from "../puzzles/Puzzles_Inhuman";
 import { solveSudoku, checkEmptyCells, isBoardSolved } from "../puzzles/Sudoku_Solver";
 import { returnsCoordinatesOfGivenCells, isGivenCell } from "./Conditional_Styles";
+import Hint from "react-native-vector-icons/Feather";
+import Edit from "react-native-vector-icons/Feather";
+import Eraser from "react-native-vector-icons/Feather";
+import ChevronsLeft from "react-native-vector-icons/Feather";
 
 const windowWidth = Dimensions.get("window").width;
 
@@ -41,8 +45,28 @@ export default function GamePage({ route, navigation }) {
   //count correct number of cells when submit button is pressed
   let correct_number_of_cells = 0;
 
+  //main blue color
+  const main_blue = "#3459b2";
+  const main_gray = "#696969";
+
+  //completion modal
+  const [modalVisible_Incorrect, setModalVisible_Incorrect] = useState(false);
+  const [modalVisible_Correct, setModalVisible_Correct] = useState(false);
+
   //where initial set up of the board is saved
   const [game_retrieved_array, Set_game_retrieved_array] = useState([
+    ["", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", ""],
+  ]);
+
+  const [notes_grid, Set_notes_grid] = useState([
     ["", "", "", "", "", "", "", "", ""],
     ["", "", "", "", "", "", "", "", ""],
     ["", "", "", "", "", "", "", "", ""],
@@ -199,24 +223,21 @@ export default function GamePage({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text>GamePage.js</Text>
-      <Text>difficulty: {game_difficulty}</Text>
-      <Text>currently_selected_cell_coordinate: {currently_selected_cell_coordinate}</Text>
-      <Text>currently_selected_cell_number: {currently_selected_cell_number}</Text>
       <TouchableOpacity
-        style={styles.submit_button}
+        style={[styles.tool_icon, styles.go_back_icon]}
         onPress={() => {
-          console.log(coordinate_list_of_given_cells);
+          navigation.navigate("Main");
         }}
       >
-        <Text>Test Button</Text>
+        <ChevronsLeft name="chevrons-left" color={main_blue} size={60} />
       </TouchableOpacity>
+      <Text style={styles.difficulty_text}>{game_difficulty}</Text>
 
       <View>
         {/* how to make a 9x9 game area and different border styles for the lines */}
         {[...Array(9).keys()].map((index_y) => {
           return (
-            <View style={[row_thick_border(index_y)]}>
+            <View style={row_thick_border(index_y)}>
               {[...Array(9).keys()].map((index_x) => {
                 return (
                   <TouchableOpacity
@@ -239,7 +260,8 @@ export default function GamePage({ route, navigation }) {
                     }}
                   >
                     {/* black font for initial cells, blue font for cells that user adds on */}
-                    <Text style={font_color_styler(coordinate_list_of_given_cells, index_y, index_x)}>{sudoku_grid[index_y][index_x]}</Text>
+                    {sudoku_grid[index_y][index_x]!=''?<Text style={font_color_styler(coordinate_list_of_given_cells, index_y, index_x)}>{sudoku_grid[index_y][index_x]}</Text>:null}
+                    {notes_grid[index_y][index_x]!=''?<Text style={styles.notes_text}>{notes_grid[index_y][index_x]}</Text>:null}
                   </TouchableOpacity>
                 );
               })}
@@ -266,7 +288,8 @@ export default function GamePage({ route, navigation }) {
             }
           }}
         >
-          <Text>{"Hint " + hint_usage_count}</Text>
+          <Hint name="search" color={main_blue} size={36} />
+          <Text style={styles.tool_text}>Hint</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tool_icon}
@@ -274,12 +297,16 @@ export default function GamePage({ route, navigation }) {
             if (is_cell_selected && !isGivenCell(coordinate_list_of_given_cells, currently_selected_cell_coordinate[0], currently_selected_cell_coordinate[1])) {
               //change the current selected cell to ""
               let temp_grid = sudoku_grid.slice(); //copying array can be iffy
+              let temp_grid_2 = notes_grid.slice();
               temp_grid[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]] = "";
+              temp_grid_2[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]] = "";
               Set_sudoku_grid(temp_grid);
+              Set_notes_grid(temp_grid_2);
             }
           }}
         >
-          <Text>Erase</Text>
+          <Eraser name="delete" color={main_blue} size={36} />
+          <Text style={styles.tool_text}>Erase</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tool_icon}
@@ -287,7 +314,8 @@ export default function GamePage({ route, navigation }) {
             Set_is_note_mode(!is_note_mode);
           }}
         >
-          <Text>{"Notes " + is_note_mode}</Text>
+          <Edit name="edit-3" color={is_note_mode ? main_gray : main_blue} size={36} />
+          <Text style={[styles.tool_text, is_note_mode ? { color: main_gray } : { color: main_blue }]}>Notes</Text>
         </TouchableOpacity>
       </View>
 
@@ -299,35 +327,119 @@ export default function GamePage({ route, navigation }) {
               onPress={() => {
                 //set the sodoku grid cell index to (index+1)
                 //only change the cell value if the cell selected is not a given cell
-                if (is_cell_selected && !isGivenCell(coordinate_list_of_given_cells, currently_selected_cell_coordinate[0], currently_selected_cell_coordinate[1])) {
+                if (!is_note_mode && is_cell_selected && !isGivenCell(coordinate_list_of_given_cells, currently_selected_cell_coordinate[0], currently_selected_cell_coordinate[1])) {
                   let newGrid = sudoku_grid.slice(); //copying array can be iffy
                   newGrid[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]] = (index + 1).toString();
                   Set_sudoku_grid(newGrid);
+                  //delete the notes in the cell as the player number is inputted
+                  let temp_grid_2 = notes_grid.slice();
+                  temp_grid_2[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]] = "";
+                  Set_notes_grid(temp_grid_2);
+                }
+                //when note mode is on
+                if (
+                  is_note_mode &&
+                  sudoku_grid[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]] === "" &&
+                  is_cell_selected &&
+                  !isGivenCell(coordinate_list_of_given_cells, currently_selected_cell_coordinate[0], currently_selected_cell_coordinate[1])
+                ) {
+                  let newGrid = notes_grid.slice(); //copying array can be iffy
+                  let new_number = (index + 1).toString();
+                  const numberString = newGrid[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]];
+                  let temp = numberString.split("");
+                  //expected output: "128"
+                  //user clicks on 6
+                  //"1286" => "1268"
+
+                  //user clicks on 6 again
+                  //"1268" => "128"
+
+                  //add the number to the notes only if the same number doesn't exist in the notes
+                  if (!temp.includes(new_number)) {
+                    temp.push(new_number);
+                    temp.sort();
+                    const res = temp.join("");
+                    newGrid[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]] = res;
+                    Set_notes_grid(newGrid);
+                    //remove the number from the notes if the same number already exists in the notes
+                  } else {
+                    let filtered_temp = temp.filter((e) => e !== new_number);
+                    filtered_temp.sort();
+                    const res = filtered_temp.join("");
+                    newGrid[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]] = res;
+                    Set_notes_grid(newGrid);
+                  }
+                  console.log(notes_grid);
                 }
               }}
             >
-              <Text style={styles.number_select_text}>{index + 1}</Text>
+              <Text style={[is_note_mode ? { color: main_gray } : { color: main_blue }, styles.number_select_text]}>{index + 1}</Text>
             </TouchableOpacity>
           );
         })}
       </View>
 
-      <TouchableOpacity
-        style={styles.submit_button}
-        onPress={() => {
-          //checkEmptyCells checks if the puzzle is complete, returns true if board is filled out, false if board has any empty cell
-          if (checkEmptyCells(sudoku_grid)) {
-            console.log("puzzle is filled");
-            console.log(sudoku_grid);
-            //returns true if the board is solved
-            if (isBoardSolved(sudoku_grid, solved_grid)) {
-              console.log("Puzzle completed and correct!");
+      {checkEmptyCells(sudoku_grid) ? (
+        <TouchableOpacity
+          style={styles.submit_button}
+          onPress={() => {
+            //checkEmptyCells checks if the puzzle is complete, returns true if board is filled out, false if board has any empty cell
+            if (checkEmptyCells(sudoku_grid)) {
+              if (isBoardSolved(sudoku_grid, solved_grid)) {
+                console.log("Puzzle completed and correct!");
+                setModalVisible_Correct(true);
+              } else {
+                console.log("Puzzle is incorrect");
+                setModalVisible_Incorrect(true);
+              }
             }
-          }
+          }}
+        >
+          <Text style={styles.submit_text}>Submit</Text>
+        </TouchableOpacity>
+      ) : null}
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible_Incorrect}
+        onRequestClose={() => {
+          setModalVisible_Incorrect(!modalVisible_Incorrect);
         }}
       >
-        <Text>Submit</Text>
-      </TouchableOpacity>
+        <View style={styles.modal_box}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Incorrect</Text>
+            <Pressable style={styles.modalButton} onPress={() => setModalVisible_Incorrect(!modalVisible_Incorrect)}>
+              <Text style={styles.textStyle}>Try Again</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible_Correct}
+        onRequestClose={() => {
+          setModalVisible_Correct(!modalVisible_Correct);
+        }}
+      >
+        <View style={styles.modal_box}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Complete</Text>
+            <Pressable
+              style={styles.modalButton}
+              onPress={() => {
+                setModalVisible_Correct(!modalVisible_Correct);
+                navigation.navigate("Main");
+              }}
+            >
+              <Text style={styles.textStyle}>Home</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       <StatusBar style="auto" />
     </View>
@@ -337,68 +449,78 @@ export default function GamePage({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#8ea18c",
+    backgroundColor: "white",
     alignItems: "center",
     justifyContent: "center",
     width: windowWidth,
   },
+  difficulty_text: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#696969",
+  },
+
   tool_select_area: {
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    borderWidth: 1,
-    borderColor: "blue",
     marginTop: 15,
   },
   tool_icon: {
-    height: 40,
-    width: 40,
-    backgroundColor: "pink",
-    margin: 5,
+    marginLeft: 35,
+    marginRight: 35,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tool_text: {
+    color: "#3459b2",
+    fontWeight: "bold",
+    fontSize: 12,
+  },
+  go_back_icon: {
+    position: "absolute",
+    marginTop: 0,
+    marginLeft: 0,
+    top: 1,
+    left: 1,
   },
   number_select_area: {
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    borderWidth: 1,
-    borderColor: "blue",
-    marginTop: 15,
+    marginTop: 10,
   },
   number_select_box: {
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "black",
-    width: 35,
-    height: 35,
+    width: 40,
   },
   number_select_text: {
-    color: "black",
-    fontSize: 24,
+    fontSize: 42,
   },
   cell: {
     alignItems: "center",
     justifyContent: "center",
-    width: 30,
-    height: 30,
-    borderColor: "green",
+    width: 45,
+    height: 45,
+    borderColor: "black",
     borderWidth: 0.5,
     backgroundColor: "white",
   },
   cell_thick: {
     alignItems: "center",
     justifyContent: "center",
-    width: 30,
-    height: 30,
+    width: 45,
+    height: 45,
     backgroundColor: "white",
     borderRightWidth: 2,
     borderRightColor: "black",
     borderLeftWidth: 0.5,
     borderTopWidth: 0.5,
     borderBottomWidth: 0.5,
-    borderLeftColor: "green",
-    borderTopColor: "green",
-    borderBottomColor: "green",
+    borderLeftColor: "black",
+    borderTopColor: "black",
+    borderBottomColor: "black",
   },
   row: {
     flexDirection: "row",
@@ -409,21 +531,33 @@ const styles = StyleSheet.create({
     borderColor: "black",
   },
   cell_text: {
-    fontSize: 20,
+    fontSize: 26,
     color: "black",
   },
   cell_text2: {
-    fontSize: 20,
+    fontSize: 26,
     color: "blue",
   },
+  notes_text: {
+    fontSize: 11,
+    fontWeight: "bold",
+    color: "#696969",
+  },
   submit_button: {
+    position: "absolute",
+    bottom: 70,
     alignItems: "center",
     justifyContent: "center",
     height: 50,
-    width: 150,
-    backgroundColor: "pink",
-    marginTop: 20,
-    borderRadius: 5,
+    width: 100,
+    backgroundColor: "#3459b2",
+    marginTop: 25,
+    borderRadius: 10,
+  },
+  submit_text: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 18,
   },
 
   selected_cell: {
@@ -434,5 +568,52 @@ const styles = StyleSheet.create({
   },
   same_row_or_column: {
     backgroundColor: "#e3ecf5",
+  },
+
+  icon_imag: {
+    flex: 1,
+  },
+
+  modal_box: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalView: {
+    width: "50%",
+    height: "20%",
+    backgroundColor: "white",
+    borderRadius: 20,
+    borderWidth: 5,
+    borderColor: "#3459b2",
+    paddingLeft: 35,
+    paddingRight: 35,
+    paddingTop: 25,
+    paddingBottom: 15,
+    alignItems: "center",
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+  },
+  modalButton: {
+    marginTop: 10,
+    backgroundColor: "#3459b2",
+    padding: 15,
+    borderRadius: 25,
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 18,
+    textAlign: "center",
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: 20,
+    color: "black",
   },
 });

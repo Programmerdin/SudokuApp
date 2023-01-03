@@ -1,6 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View, Dimensions, TouchableOpacity } from "react-native";
 
+
 const windowWidth = Dimensions.get("window").width;
 
 export default function MainPage({ navigation }) {
@@ -8,7 +9,6 @@ export default function MainPage({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text>Main Page</Text>
       {buttons.map((difficulty) => {
         return (
           <TouchableOpacity
@@ -31,22 +31,23 @@ export default function MainPage({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "blue",
+    backgroundColor: "white",
     alignItems: "center",
     justifyContent: "center",
     width: windowWidth,
   },
+
   button: {
-    width: 200,
-    height: 50,
-    backgroundColor: "red",
+    width: 180,
+    height: 55,
+    backgroundColor: "#3459b2",
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 10,
+    marginTop: 20,
   },
   button_text: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
     color: "white",
   },
