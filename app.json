@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "SudokuApp",
-    "slug": "SudokuApp",
+    "name": "No Ad Free Sudoku",
+    "slug": "NoAdFreeSudoku",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/Icon-512.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/Icon-512.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -21,13 +21,20 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.NoAdFreeSudoku",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/Icon-512.png",
         "backgroundColor": "#FFFFFF"
       }
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2b139b7c-fca7-44fb-9904-867297fa9ce4"
+      }
     }
   }
 }

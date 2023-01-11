@@ -260,8 +260,8 @@ export default function GamePage({ route, navigation }) {
                     }}
                   >
                     {/* black font for initial cells, blue font for cells that user adds on */}
-                    {sudoku_grid[index_y][index_x]!=''?<Text style={font_color_styler(coordinate_list_of_given_cells, index_y, index_x)}>{sudoku_grid[index_y][index_x]}</Text>:null}
-                    {notes_grid[index_y][index_x]!=''?<Text style={styles.notes_text}>{notes_grid[index_y][index_x]}</Text>:null}
+                    {sudoku_grid[index_y][index_x] != "" ? <Text style={font_color_styler(coordinate_list_of_given_cells, index_y, index_x)}>{sudoku_grid[index_y][index_x]}</Text> : null}
+                    {notes_grid[index_y][index_x] != "" ? <Text style={styles.notes_text}>{notes_grid[index_y][index_x]}</Text> : null}
                   </TouchableOpacity>
                 );
               })}
@@ -369,7 +369,6 @@ export default function GamePage({ route, navigation }) {
                     newGrid[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]] = res;
                     Set_notes_grid(newGrid);
                   }
-                  console.log(notes_grid);
                 }
               }}
             >
@@ -386,10 +385,8 @@ export default function GamePage({ route, navigation }) {
             //checkEmptyCells checks if the puzzle is complete, returns true if board is filled out, false if board has any empty cell
             if (checkEmptyCells(sudoku_grid)) {
               if (isBoardSolved(sudoku_grid, solved_grid)) {
-                console.log("Puzzle completed and correct!");
                 setModalVisible_Correct(true);
               } else {
-                console.log("Puzzle is incorrect");
                 setModalVisible_Incorrect(true);
               }
             }
@@ -479,7 +476,7 @@ const styles = StyleSheet.create({
   },
   go_back_icon: {
     position: "absolute",
-    marginTop: 0,
+    marginTop: 5,
     marginLeft: 0,
     top: 1,
     left: 1,
@@ -536,7 +533,7 @@ const styles = StyleSheet.create({
   },
   cell_text2: {
     fontSize: 26,
-    color: "blue",
+    color: "#3459b2",
   },
   notes_text: {
     fontSize: 11,
