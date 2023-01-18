@@ -282,6 +282,11 @@ export default function GamePage({ route, navigation }) {
               let temp_grid = sudoku_grid.slice(); //copying array can be iffy
               temp_grid[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]] = correct_number;
               Set_sudoku_grid(temp_grid);
+              //delete notes
+              let temp_notes_grid = notes_grid.slice();
+              temp_notes_grid[currently_selected_cell_coordinate[0]][currently_selected_cell_coordinate[1]] = "";
+              Set_notes_grid(temp_notes_grid);
+
               //add coordinates to given cell list
               Set_coordinate_list_of_given_cells([...coordinate_list_of_given_cells, [currently_selected_cell_coordinate[0], currently_selected_cell_coordinate[1]]]);
               Set_hint_usage_count(hint_usage_count + 1);
