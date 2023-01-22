@@ -253,7 +253,7 @@ export default function GamePage({ route, navigation }) {
                         is_cell_selected
                       ),
                     ]}
-                    onPress={() => {
+                    onPressIn={() => {
                       Set_Currently_selected_cell_coordinate([index_y, index_x]);
                       Set_is_cell_selected(true);
                       Set_currently_selected_cell_number(sudoku_grid[index_y][index_x]);
@@ -273,7 +273,7 @@ export default function GamePage({ route, navigation }) {
       <View style={styles.tool_select_area}>
         <TouchableOpacity
           style={styles.tool_icon}
-          onPress={() => {
+          onPressIn={() => {
             //check if a cell has been selected and the selected cell is not a givenCell
             if (is_cell_selected && !isGivenCell(coordinate_list_of_given_cells, currently_selected_cell_coordinate[0], currently_selected_cell_coordinate[1])) {
               //find the correct number for the given cell position
@@ -315,7 +315,7 @@ export default function GamePage({ route, navigation }) {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tool_icon}
-          onPress={() => {
+          onPressIn={() => {
             Set_is_note_mode(!is_note_mode);
           }}
         >
@@ -329,7 +329,7 @@ export default function GamePage({ route, navigation }) {
           return (
             <TouchableOpacity
               style={styles.number_select_box}
-              onPress={() => {
+              onPressIn={() => {
                 //set the sodoku grid cell index to (index+1)
                 //only change the cell value if the cell selected is not a given cell
                 if (!is_note_mode && is_cell_selected && !isGivenCell(coordinate_list_of_given_cells, currently_selected_cell_coordinate[0], currently_selected_cell_coordinate[1])) {

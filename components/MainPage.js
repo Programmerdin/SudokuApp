@@ -13,7 +13,7 @@ export default function MainPage({ navigation }) {
         return (
           <TouchableOpacity
             style={styles.button}
-            onPress={() => {
+            onPressIn={() => {
               navigation.navigate("Game", {
                 game_difficulty: difficulty,
               });
